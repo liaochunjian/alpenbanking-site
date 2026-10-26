@@ -1,0 +1,15 @@
+# Local dependency installs for the tooling scripts
+node_modules/
+
+# Python artifacts produced by the generator scripts
+__pycache__/
+*.py[cod]
+
+# macOS / editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Local logs
+*.log
