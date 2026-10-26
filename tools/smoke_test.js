@@ -145,6 +145,20 @@ function check(name, cond, extra) {
     });
     check('site-wide: no broken internal links', broken.length === 0, broken.join(', '));
   }
+  // 4.8b) Every internal link must be relative (site can live under any sub-path)
+  {
+    const fs = require('fs');
+    const files = fs.readdirSync(ROOT).filter(f => f.endsWith('.html'));
+    const abs = [];
+    files.forEach((f) => {
+      const src = fs.readFileSync(path.join(ROOT, f), 'utf8');
+      (src.match(/(?:href|src)="([^"]+)"/g) || []).forEach((raw) => {
+        const v = raw.replace(/^(?:href|src)="/, '').slice(0, -1);
+        if (v.startsWith('/') && !v.startsWith('//')) abs.push(`${f} -> ${v}`);
+      });
+    });
+    check('site-wide: internal links are all relative (sub-path deploys OK)', abs.length === 0, abs.join(', '));
+  }
   // 4.9) Files required for nginx deployment exist
   {
     const fs = require('fs');
