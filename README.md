@@ -171,7 +171,56 @@ curl -I http://127.0.0.1/tools/      # 403
 
 回滚：`nginx -t` 前置校验 + `git checkout <上一个 tag>` 即版本回退，静态文件无迁移、无状态。
 
-## 九、二次开发提示
+## 九、部署到 GitHub Pages
+
+站点为零构建纯静态文件，GitHub Pages 直接发布仓库即可，**无需任何构建命令**。
+
+**一次性的两步手动操作**（其余全自动）：
+
+1. 仓库必须**公开**：`Settings → General → Danger Zone → Change visibility → Make public`
+   （GitHub Free 账户的 Pages 只对公开仓库生效；私有仓库需 Pro / Team / Enterprise 套餐）
+2. 开启 Pages：`Settings → Pages → Build and deployment → Source` 选 **Deploy from a branch**，
+   分支选 `main`，目录选 **`/ (root)`**，点 Save
+
+之后每次改代码只需：
+
+```bash
+git add -A && git commit -m "..." && git push
+```
+
+推送后 Actions 中的 `pages build and deployment` 工作流会自动拉取、打包并发布。
+
+**默认访问地址**
+
+```
+https://liaochunjian.github.io/alpenbanking-site/
+https://liaochunjian.github.io/alpenbanking-site/personal.html
+```
+
+✅ 全站 href/src 均为相对路径（`personal.html`、`assets/css/main.css`），因此在 `/<仓库名>/` 二级目录下无需任何改写即可正常访问 —— 这也是这套代码能在 nginx 根目录和 GitHub Pages 子目录两种环境下通用的原因。
+❌ 注意：GitHub Pages 没有 nginx 的 `try_files`，美化 URL（`/personal`）不被支持，必须带 `.html` 后缀；`404.html` 也会在文件不存在时自动返回。
+
+**自定义域名**：`Settings → Pages → Custom domain` 填入域名后 Save，再到 DNS 服务商处添加记录：
+
+| 域名类型 | DNS 记录 |
+|---|---|
+| 子域（`www.`、`site.` 等） | `CNAME` → `liaochunjian.github.io` |
+| 根域（`example.com`） | `A` → `185.199.108.153 / 185.199.109.153 / 185.199.110.153 / 185.199.111.153`（可再加 AAAA） |
+
+GitHub 会自动签发并续期 Let's Encrypt 证书（首次可能需 10~30 分钟），届时可在 Pages 设置里勾选 **Enforce HTTPS**。绑定自定义域名后路径前缀消失（`https://example.com/personal.html`），相对引用依然有效，无需改动代码。仓库根部的 `CNAME` 文件会在你填域名后由 GitHub 自动生成。
+
+**生效时间**：首次启用约 1~3 分钟即可访问，最长不超过 10 分钟；后续每次 push 约 30 秒 ~ 2 分钟。
+
+**出现 404 的排查顺序**
+
+1. 看 `Actions` 标签页：`pages build and deployment` 是否绿色成功（失败多半是 Jekyll 处理报错或文件超限）
+2. `Settings → Pages` 页面顶部是否已显示 "Your site is live at https://..."
+3. 确认分支/目录确实是 `main` + `/ (root)`，而不是 `__gh-pages` 或 `/docs`
+4. 仓库是否为 **Public**（私有仓库且非付费套餐时，Pages 会一直不可用）
+5. 自定义域名场景：检查 DNS 是否已生效（`dig +short www.example.com`）以及 CNAME 文件是否存在
+6. 仍是 404 时，用带后缀的完整路径试：`https://liaochunjian.github.io/alpenbanking-site/index.html`
+
+## 十、二次开发提示
 
 - 改内容：更新 `sgb_website_md/` 后重跑 `tools/` 下两个脚本即可。
 - 换主色：只改 `assets/css/main.css` 顶部 `:root` 中的 `--c-red*` 变量。

@@ -1,0 +1,2 @@
+# 告诉 GitHub Pages 跳过 Jekyll 构建，直接原样发布静态文件
+# 适用于纯静态站点（无 Liquid 模板、无 _layouts / _includes 目录场景）
